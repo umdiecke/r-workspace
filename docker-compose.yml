@@ -1,4 +1,11 @@
 services:
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: r-workspace-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   db:
     image: postgres:17-alpine
     container_name: r-workspace-db
@@ -23,10 +30,14 @@ services:
     environment:
       UMDIECKE_CORS_ORIGINS: '["http://localhost:5173"]'
       UMDIECKE_DATABASE_URL: postgresql+psycopg://umdiecke:umdiecke@db:5432/umdiecke
+      UMDIECKE_SMTP_HOST: mailhog
+      UMDIECKE_SMTP_PORT: "1025"
       WATCHFILES_FORCE_POLLING: "true"
     depends_on:
       db:
         condition: service_healthy
+      mailhog:
+        condition: service_started
     ports:
       - "8000:8000"
     volumes:

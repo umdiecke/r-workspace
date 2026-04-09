@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class Token(BaseModel):
@@ -14,12 +14,37 @@ class TokenPayload(BaseModel):
 
 class User(BaseModel):
     username: str
+    email: EmailStr
     full_name: str
     disabled: bool = False
 
 
 class UserInDB(User):
     hashed_password: str
+
+
+class UserRegisterRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=255)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=255)
+    full_name: str = Field(min_length=1, max_length=255)
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class AccountEmailUpdateRequest(BaseModel):
+    email: EmailStr
+
+
+class AccountPasswordUpdateRequest(BaseModel):
+    current_password: str = Field(min_length=1, max_length=255)
+    new_password: str = Field(min_length=8, max_length=255)
+
+
+class MessageResponse(BaseModel):
+    message: str
 
 
 class HeartbeatResponse(BaseModel):
@@ -40,6 +65,11 @@ class TimeEntryStartResponse(BaseModel):
 
 class TimeEntryStopRequest(TimeEntryBase):
     project_name: str
+
+
+class TimeEntryUpdateRequest(TimeEntryBase):
+    start_time: datetime
+    end_time: datetime
 
 
 class TimeEntryResponse(TimeEntryBase):

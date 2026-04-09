@@ -1,5 +1,22 @@
 # Release Notes
 
+## 1.3.0
+
+Release date: 2026-04-09
+
+Relevant changes:
+
+- Added user registration with required email address storage.
+- Added password reset by email with SMTP-based delivery support.
+- Added account settings for updating email address and password.
+- Added editing and deleting for recorded time entries.
+- Kept time entries isolated per authenticated user.
+- Swapped the tab order so `Zeiterfassung` comes before `Sandbox`.
+- Switched German UI strings and tooltips to proper umlauts.
+- Standardized visible date display in the UI to `dd.MM.yyyy`.
+- Added MailHog to Docker Compose for local email testing.
+- Made the frontend API target host-aware so the app also works from phones in the same network.
+
 ## 1.2.0
 
 Release date: 2026-04-09

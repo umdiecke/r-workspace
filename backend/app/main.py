@@ -3,23 +3,37 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.database import Base, engine, get_db
-from app.db_models import TimeEntry
+from app.database import Base, SessionLocal, engine, get_db
+from app.db_models import TimeEntry, UserRecord
+from app.emailing import generate_temporary_password, send_password_reset_email
 from app.models import (
     ActiveTimeEntryResponse,
+    AccountEmailUpdateRequest,
+    AccountPasswordUpdateRequest,
     HeartbeatResponse,
+    MessageResponse,
+    PasswordResetRequest,
     ProjectSuggestionsResponse,
     TimeEntryListResponse,
     TimeEntryResponse,
     TimeEntryStartResponse,
     TimeEntryStopRequest,
+    TimeEntryUpdateRequest,
     Token,
     User,
+    UserRegisterRequest,
 )
-from app.security import authenticate_user, create_access_token, get_current_user
+from app.security import (
+    authenticate_user,
+    create_access_token,
+    get_current_user,
+    hash_password,
+    verify_password,
+)
 from app.time_tracking import (
     build_filtered_entries_query,
     count_entries,
@@ -35,6 +49,19 @@ from app.time_tracking import (
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        admin_user = db.scalar(select(UserRecord).where(UserRecord.username == "admin"))
+        if admin_user is None:
+            db.add(
+                UserRecord(
+                    username="admin",
+                    email="admin@rworkspace.local",
+                    full_name="R.Workspace Administrator",
+                    hashed_password=hash_password("changeit"),
+                    disabled=False,
+                )
+            )
+            db.commit()
     yield
 
 app = FastAPI(
@@ -75,7 +102,8 @@ async def heartbeat() -> HeartbeatResponse:
     summary="Issue an OAuth2 access token",
 )
 async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
-    user = authenticate_user(form_data.username, form_data.password)
+    with SessionLocal() as db:
+        user = authenticate_user(db, form_data.username, form_data.password)
     if user is None:
         from fastapi import HTTPException, status
 
@@ -89,6 +117,63 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
     return Token(access_token=access_token, token_type="bearer")
 
 
+@app.post(
+    "/api/auth/register",
+    tags=["Authentication"],
+    response_model=User,
+    summary="Register a new user",
+    status_code=status.HTTP_201_CREATED,
+)
+async def register_user(
+    payload: UserRegisterRequest,
+    db: Session = Depends(get_db),
+) -> User:
+    if db.scalar(select(UserRecord).where(UserRecord.username == payload.username)):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already exists.")
+    if db.scalar(select(UserRecord).where(UserRecord.email == payload.email)):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already exists.")
+
+    user = UserRecord(
+        username=payload.username,
+        email=payload.email,
+        full_name=payload.full_name,
+        hashed_password=hash_password(payload.password),
+        disabled=False,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return User.model_validate(
+        {
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "disabled": user.disabled,
+        }
+    )
+
+
+@app.post(
+    "/api/auth/password-reset",
+    tags=["Authentication"],
+    response_model=MessageResponse,
+    summary="Reset password and send a temporary password by email",
+)
+async def reset_password(
+    payload: PasswordResetRequest,
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    user = db.scalar(select(UserRecord).where(UserRecord.email == payload.email))
+    if user is None:
+        return MessageResponse(message="If the address exists, a new password has been sent.")
+
+    temporary_password = generate_temporary_password()
+    user.hashed_password = hash_password(temporary_password)
+    db.commit()
+    send_password_reset_email(user.email, user.username, temporary_password)
+    return MessageResponse(message="If the address exists, a new password has been sent.")
+
+
 @app.get(
     "/api/me",
     tags=["Users"],
@@ -97,6 +182,59 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
 )
 async def read_current_user(current_user: User = Depends(get_current_user)) -> User:
     return current_user
+
+
+@app.put(
+    "/api/account/email",
+    tags=["Users"],
+    response_model=User,
+    summary="Update the email address of the current user",
+)
+async def update_account_email(
+    payload: AccountEmailUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    existing = db.scalar(select(UserRecord).where(UserRecord.email == payload.email))
+    if existing is not None and existing.username != current_user.username:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already exists.")
+
+    user = db.scalar(select(UserRecord).where(UserRecord.username == current_user.username))
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    user.email = payload.email
+    db.commit()
+    db.refresh(user)
+    return User.model_validate(
+        {
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "disabled": user.disabled,
+        }
+    )
+
+
+@app.put(
+    "/api/account/password",
+    tags=["Users"],
+    response_model=MessageResponse,
+    summary="Update the password of the current user",
+)
+async def update_account_password(
+    payload: AccountPasswordUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    user = db.scalar(select(UserRecord).where(UserRecord.username == current_user.username))
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    if not verify_password(payload.current_password, user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Current password is incorrect.")
+
+    user.hashed_password = hash_password(payload.new_password)
+    db.commit()
+    return MessageResponse(message="Password updated successfully.")
 
 
 @app.get(
@@ -194,6 +332,54 @@ async def stop_time_entry(
     db.commit()
     db.refresh(entry)
     return serialize_time_entry(entry)
+
+
+@app.put(
+    "/api/time-entries/{entry_id}",
+    tags=["Time Tracking"],
+    response_model=TimeEntryResponse,
+    summary="Edit a recorded time entry",
+)
+async def update_time_entry(
+    entry_id: int,
+    payload: TimeEntryUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> TimeEntryResponse:
+    entry = db.get(TimeEntry, entry_id)
+    if entry is None or entry.owner_username != current_user.username:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Time entry not found.")
+    if entry.end_time is None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Running entries cannot be edited.")
+    if payload.end_time <= payload.start_time:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="End time must be after start time.")
+
+    entry.start_time = payload.start_time
+    entry.end_time = payload.end_time
+    entry.project_name = (payload.project_name or "").strip() or None
+    entry.activity_description = (payload.activity_description or "").strip() or None
+    db.commit()
+    db.refresh(entry)
+    return serialize_time_entry(entry)
+
+
+@app.delete(
+    "/api/time-entries/{entry_id}",
+    tags=["Time Tracking"],
+    response_model=MessageResponse,
+    summary="Delete a recorded time entry",
+)
+async def delete_time_entry(
+    entry_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    entry = db.get(TimeEntry, entry_id)
+    if entry is None or entry.owner_username != current_user.username:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Time entry not found.")
+    db.delete(entry)
+    db.commit()
+    return MessageResponse(message="Time entry deleted successfully.")
 
 
 @app.get(

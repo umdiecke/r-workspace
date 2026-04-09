@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Locale, View, messages } from "./i18n";
+import { AuthMode, Locale, View, messages } from "./i18n";
 
 type Heartbeat = {
   name: string;
@@ -8,6 +8,7 @@ type Heartbeat = {
 
 type User = {
   username: string;
+  email: string;
   full_name: string;
   disabled: boolean;
 };
@@ -40,7 +41,16 @@ type ActiveTimeEntryResponse = {
   previous_project_name: string | null;
 };
 
-const API_BASE_URL = "http://localhost:8000";
+type TimeEntryFilters = {
+  projectName: string;
+  year: string;
+  month: string;
+  day: string;
+};
+
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  `${window.location.protocol}//${window.location.hostname || "localhost"}:8000`;
 const TOKEN_STORAGE_KEY = "rworkspace.accessToken";
 const LOCALE_STORAGE_KEY = "rworkspace.locale";
 const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 50, 100];
@@ -99,6 +109,32 @@ function formatHours(value: number, locale: Locale) {
   })} h`;
 }
 
+function toDateTimeLocal(isoValue: string) {
+  const date = new Date(isoValue);
+  const offset = date.getTimezoneOffset();
+  const adjusted = new Date(date.getTime() - offset * 60000);
+  return adjusted.toISOString().slice(0, 16);
+}
+
+function formatDateTimePreview(value: string) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${day}.${month}.${year} ${hours}:${minutes}`;
+}
+
 export default function App() {
   const [locale, setLocale] = useState<Locale>(() => {
     const saved = localStorage.getItem(LOCALE_STORAGE_KEY);
@@ -106,13 +142,21 @@ export default function App() {
   });
   const t = messages[locale];
   const [heartbeat, setHeartbeat] = useState<Heartbeat | null>(null);
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [username, setUsername] = useState("admin");
   const [password, setPassword] = useState("changeit");
+  const [registerFullName, setRegisterFullName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [resetEmail, setResetEmail] = useState("");
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY) ?? "");
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [activeView, setActiveView] = useState<View>("sandbox");
+  const [activeView, setActiveView] = useState<View>("time-tracking");
+  const [accountEmail, setAccountEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [totalEntries, setTotalEntries] = useState(0);
@@ -127,6 +171,11 @@ export default function App() {
   const [activeEntry, setActiveEntry] = useState<TimeEntry | null>(null);
   const [stopProjectName, setStopProjectName] = useState("");
   const [stopDescription, setStopDescription] = useState("");
+  const [editingEntryId, setEditingEntryId] = useState<number | null>(null);
+  const [editStartTime, setEditStartTime] = useState("");
+  const [editEndTime, setEditEndTime] = useState("");
+  const [editProjectName, setEditProjectName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
   const [timerTick, setTimerTick] = useState(Date.now());
   const [isTimeActionLoading, setIsTimeActionLoading] = useState(false);
   const [isTableLoading, setIsTableLoading] = useState(false);
@@ -169,7 +218,10 @@ export default function App() {
         }
         return response.json();
       })
-      .then(setUser)
+      .then((payload: User) => {
+        setUser(payload);
+        setAccountEmail(payload.email);
+      })
       .catch((err: Error) => {
         setToken("");
         setError(err.message);
@@ -220,13 +272,24 @@ export default function App() {
     setStopProjectName((currentValue) => currentValue || rememberedProject);
   }
 
-  async function loadTimeEntries(currentToken: string, currentPage: number, currentPageSize: number) {
+  async function loadTimeEntries(
+    currentToken: string,
+    currentPage: number,
+    currentPageSize: number,
+    filters?: TimeEntryFilters
+  ) {
     setIsTableLoading(true);
-    const query = buildQueryString({
+    const appliedFilters = filters ?? {
       projectName: projectFilter,
       year: yearFilter,
       month: monthFilter,
-      day: dayFilter,
+      day: dayFilter
+    };
+    const query = buildQueryString({
+      projectName: appliedFilters.projectName,
+      year: appliedFilters.year,
+      month: appliedFilters.month,
+      day: appliedFilters.day,
       page: currentPage,
       pageSize: currentPageSize
     });
@@ -254,6 +317,7 @@ export default function App() {
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setStatusMessage("");
     setIsLoading(true);
 
     try {
@@ -278,6 +342,65 @@ export default function App() {
 
       const tokenPayload = await tokenResponse.json();
       setToken(tokenPayload.access_token);
+      setAuthMode("login");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleRegister(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setStatusMessage("");
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username,
+          email: registerEmail,
+          password,
+          full_name: registerFullName
+        })
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({ detail: t.registrationFailed }));
+        throw new Error(payload.detail ?? t.registrationFailed);
+      }
+      setStatusMessage(t.registered);
+      setAuthMode("login");
+      setRegisterFullName("");
+      setRegisterEmail("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.registrationFailed);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleResetPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setStatusMessage("");
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/password-reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail })
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({ detail: t.resetFailed }));
+        throw new Error(payload.detail ?? t.resetFailed);
+      }
+
+      const payload = (await response.json()) as { message?: string };
+      setStatusMessage(payload.message ?? t.resetSent);
+      setResetEmail("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.resetFailed);
     } finally {
       setIsLoading(false);
     }
@@ -288,7 +411,55 @@ export default function App() {
     setUser(null);
     setPassword("changeit");
     setError("");
+    setStatusMessage("");
     setPage(1);
+  }
+
+  async function handleUpdateEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!token) {
+      return;
+    }
+    setError("");
+    setStatusMessage("");
+    const response = await fetch(`${API_BASE_URL}/api/account/email`, {
+      method: "PUT",
+      headers: { ...buildAuthHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({ email: accountEmail })
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ detail: t.emailSaved }));
+      setError(payload.detail ?? t.emailSaved);
+      return;
+    }
+    const updatedUser = (await response.json()) as User;
+    setUser(updatedUser);
+    setStatusMessage(t.emailSaved);
+  }
+
+  async function handleUpdatePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!token) {
+      return;
+    }
+    setError("");
+    setStatusMessage("");
+    const response = await fetch(`${API_BASE_URL}/api/account/password`, {
+      method: "PUT",
+      headers: { ...buildAuthHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword
+      })
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ detail: t.passwordSaved }));
+      setError(payload.detail ?? t.passwordSaved);
+      return;
+    }
+    setCurrentPassword("");
+    setNewPassword("");
+    setStatusMessage(t.passwordSaved);
   }
 
   async function handleStartTimeTracking() {
@@ -297,6 +468,7 @@ export default function App() {
     }
 
     setError("");
+    setStatusMessage("");
     setIsTimeActionLoading(true);
 
     try {
@@ -313,6 +485,7 @@ export default function App() {
       setStopProjectName(previousProjectName);
       setStopDescription("");
       await refreshTimeTrackingData(token);
+      setStatusMessage(t.started);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.startFailed);
     } finally {
@@ -333,6 +506,7 @@ export default function App() {
     }
 
     setError("");
+    setStatusMessage("");
     setIsTimeActionLoading(true);
 
     try {
@@ -355,6 +529,7 @@ export default function App() {
 
       setStopDescription("");
       await refreshTimeTrackingData(token);
+      setStatusMessage(t.stopped);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.stopFailed);
     } finally {
@@ -372,10 +547,30 @@ export default function App() {
     await loadTimeEntries(token, 1, pageSize);
   }
 
+  function handleClearFilters() {
+    setProjectFilter("");
+    setYearFilter("");
+    setMonthFilter("");
+    setDayFilter("");
+    setPage(1);
+
+    if (token) {
+      void loadTimeEntries(token, 1, pageSize, {
+        projectName: "",
+        year: "",
+        month: "",
+        day: ""
+      }).catch((err: Error) => {
+        setError(err.message);
+      });
+    }
+  }
+
   async function handleExportCsv() {
     if (!token) {
       return;
     }
+    setError("");
 
     const query = buildQueryString({
       projectName: projectFilter,
@@ -400,6 +595,74 @@ export default function App() {
     anchor.download = "time-entries.csv";
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  function beginEdit(entry: TimeEntry) {
+    setError("");
+    setStatusMessage("");
+    setEditingEntryId(entry.id);
+    setEditStartTime(toDateTimeLocal(entry.start_time));
+    setEditEndTime(toDateTimeLocal(entry.end_time ?? entry.start_time));
+    setEditProjectName(entry.project_name ?? "");
+    setEditDescription(entry.activity_description ?? "");
+  }
+
+  async function handleSaveEntry(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!token || editingEntryId === null) {
+      return;
+    }
+
+    setError("");
+    setStatusMessage("");
+
+    const startDate = new Date(editStartTime);
+    const endDate = new Date(editEndTime);
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+      setError(t.invalidDateTime);
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/time-entries/${editingEntryId}`, {
+      method: "PUT",
+      headers: { ...buildAuthHeaders(token), "Content-Type": "application/json" },
+      body: JSON.stringify({
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString(),
+        project_name: editProjectName.trim(),
+        activity_description: editDescription.trim()
+      })
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ detail: t.entryUpdated }));
+      setError(payload.detail ?? t.entryUpdated);
+      return;
+    }
+    setEditingEntryId(null);
+    setStatusMessage(t.entryUpdated);
+    await refreshTimeTrackingData(token);
+  }
+
+  async function handleDeleteEntry(entryId: number) {
+    if (!token || !window.confirm(t.deleteConfirm)) {
+      return;
+    }
+    setError("");
+    setStatusMessage("");
+    const response = await fetch(`${API_BASE_URL}/api/time-entries/${entryId}`, {
+      method: "DELETE",
+      headers: buildAuthHeaders(token)
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ detail: t.entryDeleted }));
+      setError(payload.detail ?? t.entryDeleted);
+      return;
+    }
+    if (editingEntryId === entryId) {
+      setEditingEntryId(null);
+    }
+    setStatusMessage(t.entryDeleted);
+    await refreshTimeTrackingData(token);
   }
 
   const languageSelector = (
@@ -436,7 +699,7 @@ export default function App() {
               <dt>{t.swaggerUi}</dt>
               <dd>
                 <a href={`${API_BASE_URL}/docs`} target="_blank" rel="noreferrer" title={t.tooltipOpenSwagger}>
-                  http://localhost:8000/docs
+                  {`${API_BASE_URL}/docs`}
                 </a>
               </dd>
             </div>
@@ -444,7 +707,7 @@ export default function App() {
               <dt>{t.heartbeat}</dt>
               <dd>
                 <a href={`${API_BASE_URL}/api/heartbeat`} target="_blank" rel="noreferrer" title={t.tooltipOpenSwagger}>
-                  http://localhost:8000/api/heartbeat
+                  {`${API_BASE_URL}/api/heartbeat`}
                 </a>
               </dd>
             </div>
@@ -456,28 +719,79 @@ export default function App() {
         </section>
 
         <section className="login-panel">
-          <h2>{t.login}</h2>
-          <form className="auth-form" onSubmit={handleLogin}>
-            <label>
-              {t.username}
-              <input value={username} onChange={(event) => setUsername(event.target.value)} title={t.tooltipUsername} autoComplete="username" />
-            </label>
-            <label>
-              {t.password}
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                title={t.tooltipPassword}
-                autoComplete="current-password"
-              />
-            </label>
-            <button type="submit" disabled={isLoading} title={t.tooltipSignIn}>
-              {isLoading ? t.signingIn : t.signIn}
+          <div className="menu-bar auth-tabs">
+            <button type="button" className={authMode === "login" ? "menu-button menu-button-active" : "menu-button"} onClick={() => setAuthMode("login")}>
+              {t.login}
             </button>
-          </form>
+            <button type="button" className={authMode === "register" ? "menu-button menu-button-active" : "menu-button"} onClick={() => setAuthMode("register")}>
+              {t.register}
+            </button>
+            <button type="button" className={authMode === "reset" ? "menu-button menu-button-active" : "menu-button"} onClick={() => setAuthMode("reset")}>
+              {t.resetPassword}
+            </button>
+          </div>
+
+          {authMode === "login" ? (
+            <form className="auth-form" onSubmit={handleLogin}>
+              <label>
+                {t.username}
+                <input value={username} onChange={(event) => setUsername(event.target.value)} title={t.tooltipUsername} autoComplete="username" required />
+              </label>
+              <label>
+                {t.password}
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  title={t.tooltipPassword}
+                  autoComplete="current-password"
+                  required
+                />
+              </label>
+              <button type="submit" disabled={isLoading} title={t.tooltipSignIn}>
+                {isLoading ? t.signingIn : t.signIn}
+              </button>
+            </form>
+          ) : null}
+
+          {authMode === "register" ? (
+            <form className="auth-form" onSubmit={handleRegister}>
+              <label>
+                {t.fullName}
+                <input value={registerFullName} onChange={(event) => setRegisterFullName(event.target.value)} title={t.tooltipFullName} autoComplete="name" required />
+              </label>
+              <label>
+                {t.username}
+                <input value={username} onChange={(event) => setUsername(event.target.value)} title={t.tooltipUsername} autoComplete="username" required />
+              </label>
+              <label>
+                {t.email}
+                <input type="email" value={registerEmail} onChange={(event) => setRegisterEmail(event.target.value)} title={t.tooltipEmail} autoComplete="email" required />
+              </label>
+              <label>
+                {t.password}
+                <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} title={t.tooltipPassword} autoComplete="new-password" required />
+              </label>
+              <button type="submit" disabled={isLoading} title={t.tooltipRegister}>
+                {t.createAccount}
+              </button>
+            </form>
+          ) : null}
+
+          {authMode === "reset" ? (
+            <form className="auth-form" onSubmit={handleResetPassword}>
+              <label>
+                {t.email}
+                <input type="email" value={resetEmail} onChange={(event) => setResetEmail(event.target.value)} title={t.tooltipEmail} autoComplete="email" required />
+              </label>
+              <button type="submit" disabled={isLoading} title={t.tooltipResetPassword}>
+                {t.sendReset}
+              </button>
+            </form>
+          ) : null}
 
           {error ? <p className="error" role="alert">{error}</p> : null}
+          {statusMessage ? <p className="result" role="status">{statusMessage}</p> : null}
         </section>
       </main>
       </>
@@ -510,14 +824,6 @@ export default function App() {
       <nav className="card menu-bar" aria-label={t.mainNavigation}>
         <button
           type="button"
-          className={activeView === "sandbox" ? "menu-button menu-button-active" : "menu-button"}
-          onClick={() => setActiveView("sandbox")}
-          title={t.tooltipSandbox}
-        >
-          {t.sandbox}
-        </button>
-        <button
-          type="button"
           className={
             activeView === "time-tracking" ? "menu-button menu-button-active" : "menu-button"
           }
@@ -526,37 +832,17 @@ export default function App() {
         >
           {t.timeTracking}
         </button>
+        <button
+          type="button"
+          className={activeView === "sandbox" ? "menu-button menu-button-active" : "menu-button"}
+          onClick={() => setActiveView("sandbox")}
+          title={t.tooltipSandbox}
+        >
+          {t.sandbox}
+        </button>
       </nav>
 
-      {activeView === "sandbox" ? (
-        <>
-          <section className="card">
-            <h2>{t.publicHeartbeat}</h2>
-            {heartbeat ? (
-              <dl className="details">
-                <div>
-                  <dt>{t.name}</dt>
-                  <dd>{heartbeat.name}</dd>
-                </div>
-                <div>
-                  <dt>{t.version}</dt>
-                  <dd>{heartbeat.version}</dd>
-                </div>
-              </dl>
-            ) : (
-              <p>{t.loadingHeartbeat}</p>
-            )}
-          </section>
-
-          <section className="card">
-            <h2>{t.authenticatedSession}</h2>
-            <div className="result">
-              <p>{t.authenticatedAs} {user.full_name}</p>
-              <p>{t.username}: {user.username}</p>
-            </div>
-          </section>
-        </>
-      ) : (
+      {activeView === "time-tracking" ? (
         <>
           <section className="card time-panel">
             <div className="section-header">
@@ -595,6 +881,7 @@ export default function App() {
                     onChange={(event) => setStopProjectName(event.target.value)}
                     placeholder={previousProjectName || t.projectPlaceholder}
                     title={t.tooltipProject}
+                    required
                   />
                 </label>
 
@@ -645,7 +932,7 @@ export default function App() {
               </button>
             </div>
 
-            <form className="filters-grid" onSubmit={handleApplyFilters}>
+              <form className="filters-grid" onSubmit={handleApplyFilters}>
               <label>
                 {t.projectName}
                 <input
@@ -667,9 +954,9 @@ export default function App() {
               <label>
                 {t.day}
                 <input value={dayFilter} onChange={(event) => setDayFilter(event.target.value)} placeholder="9" title={t.tooltipFilterDay} />
-              </label>
-              <label>
-                {t.pageSize}
+                </label>
+                <label>
+                  {t.pageSize}
                 <select
                   value={pageSize}
                   onChange={(event) => {
@@ -684,14 +971,43 @@ export default function App() {
                     </option>
                   ))}
                 </select>
-              </label>
-              <div className="inline-actions filter-actions">
-                <button type="submit" title={t.tooltipApplyFilters}>{t.applyFilters}</button>
-              </div>
-            </form>
+                </label>
+                <div className="inline-actions filter-actions">
+                  <button type="submit" title={t.tooltipApplyFilters}>{t.applyFilters}</button>
+                  <button type="button" className="secondary-button" onClick={handleClearFilters} title={t.tooltipClearFilters}>{t.clearFilters}</button>
+                </div>
+              </form>
 
-            <div className="table-wrap">
-              <table>
+              {editingEntryId !== null ? (
+                <form className="auth-form card editing-card" onSubmit={handleSaveEntry}>
+                  <h3>{t.editEntry}</h3>
+                  <label>
+                    {t.startDateTime}
+                    <input type="datetime-local" value={editStartTime} onChange={(event) => setEditStartTime(event.target.value)} required />
+                    <span className="field-hint">{formatDateTimePreview(editStartTime) || t.dateFormatHint}</span>
+                  </label>
+                  <label>
+                    {t.endDateTime}
+                    <input type="datetime-local" value={editEndTime} onChange={(event) => setEditEndTime(event.target.value)} required />
+                    <span className="field-hint">{formatDateTimePreview(editEndTime) || t.dateFormatHint}</span>
+                  </label>
+                  <label>
+                    {t.project}
+                    <input value={editProjectName} onChange={(event) => setEditProjectName(event.target.value)} />
+                  </label>
+                  <label>
+                    {t.activityDescription}
+                    <textarea rows={3} value={editDescription} onChange={(event) => setEditDescription(event.target.value)} />
+                  </label>
+                  <div className="inline-actions">
+                    <button type="submit">{t.saveChanges}</button>
+                    <button type="button" className="secondary-button" onClick={() => setEditingEntryId(null)}>{t.cancel}</button>
+                  </div>
+                </form>
+              ) : null}
+
+              <div className="table-wrap">
+                <table>
                 <caption className="sr-only">{t.entryTableCaption}</caption>
                 <thead>
                   <tr>
@@ -702,6 +1018,7 @@ export default function App() {
                     <th scope="col">{t.projectName}</th>
                     <th scope="col">{t.activityDescription}</th>
                     <th scope="col">{t.duration}</th>
+                    <th scope="col">{t.actions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -714,11 +1031,17 @@ export default function App() {
                       <td data-label={t.projectName}>{entry.project_name ?? "-"}</td>
                       <td data-label={t.activityDescription}>{entry.activity_description ?? "-"}</td>
                       <td data-label={t.duration}>{formatHours(entry.duration_hours, locale)}</td>
+                      <td data-label={t.actions}>
+                        <div className="inline-actions compact-actions">
+                          <button type="button" className="secondary-button" onClick={() => beginEdit(entry)} title={t.tooltipEditEntry}>{t.edit}</button>
+                          <button type="button" className="secondary-button" onClick={() => void handleDeleteEntry(entry.id)} title={t.tooltipDeleteEntry}>{t.delete}</button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                   {!isTableLoading && timeEntries.length === 0 ? (
                     <tr>
-                      <td colSpan={7}>{t.noEntries}</td>
+                      <td colSpan={8}>{t.noEntries}</td>
                     </tr>
                   ) : null}
                 </tbody>
@@ -747,9 +1070,66 @@ export default function App() {
             </div>
           </section>
         </>
+      ) : (
+        <>
+          <section className="card">
+            <h2>{t.publicHeartbeat}</h2>
+            {heartbeat ? (
+              <dl className="details">
+                <div>
+                  <dt>{t.name}</dt>
+                  <dd>{heartbeat.name}</dd>
+                </div>
+                <div>
+                  <dt>{t.version}</dt>
+                  <dd>{heartbeat.version}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p>{t.loadingHeartbeat}</p>
+            )}
+          </section>
+
+          <section className="card">
+            <h2>{t.authenticatedSession}</h2>
+            <div className="result">
+              <p>{t.authenticatedAs} {user.full_name}</p>
+              <p>{t.username}: {user.username}</p>
+              <p>{t.email}: {user.email}</p>
+            </div>
+          </section>
+
+          <section className="card profile-grid">
+            <div>
+              <h2>{t.updateEmail}</h2>
+              <form className="auth-form" onSubmit={handleUpdateEmail}>
+                <label>
+                  {t.email}
+                  <input type="email" value={accountEmail} onChange={(event) => setAccountEmail(event.target.value)} title={t.tooltipEmail} autoComplete="email" required />
+                </label>
+                <button type="submit" title={t.tooltipSaveEmail}>{t.saveEmail}</button>
+              </form>
+            </div>
+            <div>
+              <h2>{t.updatePassword}</h2>
+              <form className="auth-form" onSubmit={handleUpdatePassword}>
+                <label>
+                  {t.currentPassword}
+                  <input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} title={t.tooltipCurrentPassword} autoComplete="current-password" required />
+                </label>
+                <label>
+                  {t.newPassword}
+                  <input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} title={t.tooltipNewPassword} autoComplete="new-password" required />
+                </label>
+                <button type="submit" title={t.tooltipSavePassword}>{t.savePassword}</button>
+              </form>
+            </div>
+          </section>
+        </>
       )}
 
       {error ? <p className="error global-error" role="alert">{error}</p> : null}
+      {statusMessage ? <p className="result" role="status">{statusMessage}</p> : null}
       <div className="sr-only" aria-live="polite">
         {activeEntry ? t.runningDuration : ""}
       </div>

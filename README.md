@@ -23,7 +23,7 @@ For future changes in this project:
 
 ## Versioning
 
-The application version follows SemVer and is currently `1.2.0`.
+The application version follows SemVer and is currently `1.3.0`.
 
 ## Backend
 
@@ -31,7 +31,11 @@ The application version follows SemVer and is currently `1.2.0`.
 
 - Public heartbeat endpoint at `GET /api/heartbeat`
 - OAuth2 token endpoint at `POST /oauth/token`
+- Registration endpoint at `POST /api/auth/register`
+- Password reset endpoint at `POST /api/auth/password-reset`
 - Protected user endpoint at `GET /api/me`
+- Account email update at `PUT /api/account/email`
+- Account password update at `PUT /api/account/password`
 - Time tracking endpoints under `/api/time-entries`
 - Remembered project suggestions at `GET /api/projects`
 - Swagger UI at `/docs`
@@ -65,14 +69,22 @@ npm run dev
 
 The UI will be available at `http://localhost:5173`.
 
+For phone testing in the same network, open the frontend with your computer's IP address, for example `http://192.168.1.20:5173`. The frontend will then target the backend on the same host at port `8000`.
+
 ## Important endpoints
 
 - `GET /api/heartbeat`
 - `POST /oauth/token`
+- `POST /api/auth/register`
+- `POST /api/auth/password-reset`
 - `GET /api/me`
+- `PUT /api/account/email`
+- `PUT /api/account/password`
 - `GET /api/time-entries/active`
 - `POST /api/time-entries/start`
 - `POST /api/time-entries/{entry_id}/stop`
+- `PUT /api/time-entries/{entry_id}`
+- `DELETE /api/time-entries/{entry_id}`
 - `GET /api/time-entries`
 - `GET /api/time-entries/export`
 - `GET /api/projects`
@@ -154,6 +166,9 @@ This starts:
 - FastAPI on `http://localhost:8000`
 - React/Vite on `http://localhost:5173`
 - Swagger UI on `http://localhost:8000/docs`
+- MailHog UI on `http://localhost:8025`
+
+For email-based password resets during local development, open MailHog on `http://localhost:8025`.
 
 Stop with:
 
@@ -181,3 +196,4 @@ The API also provides:
 - remembered project names
 - filtered and paged results
 - CSV export of filtered results
+- entry editing and deletion

@@ -1,5 +1,15 @@
 # Release Notes
 
+## 1.3.1
+
+Release date: 2026-04-09
+
+Relevant changes:
+
+- Fixed the seeded admin account email address so it passes backend email validation.
+- Added an automatic migration in application startup to repair older `admin@rworkspace.local` records in existing databases.
+- Updated the default SMTP sender address to a valid domain-based email.
+
 ## 1.3.0
 
 Release date: 2026-04-09

@@ -23,7 +23,7 @@ For future changes in this project:
 
 ## Versioning
 
-The application version follows SemVer and is currently `1.3.0`.
+The application version follows SemVer and is currently `1.3.1`.
 
 ## Backend
 
@@ -56,6 +56,7 @@ The API will be available at `http://localhost:8000`.
 
 - Username: `admin`
 - Password: `changeit`
+- Seed email: `admin@rworkspace.example.com`
 
 ## Frontend
 

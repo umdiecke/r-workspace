@@ -23,7 +23,7 @@ For future changes in this project:
 
 ## Versioning
 
-The application version follows SemVer and is currently `1.4.0`.
+The application version follows SemVer and is currently `1.4.1`.
 
 ## Backend
 
@@ -217,5 +217,16 @@ Authenticated users can now:
 - update full name and email address
 - change their password
 - delete their account with a two-step confirmation dialog
+
+## App Info
+
+The former `Sandbox` area is now exposed as `App-Info` or `App Info`.
+
+It provides:
+
+- heartbeat and version details
+- a direct link to Swagger UI
+- a direct link to MailHog UI in local development
+- the app installation action when supported by the browser
 
 Deleting an account also removes the user's recorded time entries.

@@ -19,7 +19,7 @@
     {
       "name": "R.Workspace",
       "SPDXID": "SPDXRef-App",
-      "versionInfo": "1.4.0",
+      "versionInfo": "1.4.1",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -30,7 +30,7 @@
     {
       "name": "r-workspace",
       "SPDXID": "SPDXRef-Backend",
-      "versionInfo": "1.4.0",
+      "versionInfo": "1.4.1",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -41,7 +41,7 @@
     {
       "name": "r-workspace-ui",
       "SPDXID": "SPDXRef-Frontend",
-      "versionInfo": "1.4.0",
+      "versionInfo": "1.4.1",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",

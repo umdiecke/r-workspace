@@ -1,5 +1,16 @@
 # Release Notes
 
+## 1.4.1
+
+Release date: 2026-04-10
+
+Relevant changes:
+
+- Renamed the former `Sandbox` navigation item to `App-Info` / `App Info`.
+- Moved the Swagger UI and install actions into the app information area.
+- Added a direct MailHog UI link to the app information area for local development.
+- Reworked the time-entry filter layout to avoid overlapping controls on narrower viewports.
+
 ## 1.4.0
 
 Release date: 2026-04-09

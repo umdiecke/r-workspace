@@ -34,6 +34,8 @@ type BeforeInstallPromptEvent = Event & {
 const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
   `${window.location.protocol}//${window.location.hostname || "localhost"}:8000`;
+const MAILHOG_UI_URL =
+  `${window.location.protocol}//${window.location.hostname || "localhost"}:8025`;
 const TOKEN_STORAGE_KEY = "rworkspace.accessToken";
 const LOCALE_STORAGE_KEY = "rworkspace.locale";
 const PAGE_SIZE_OPTIONS = [5, 10, 15, 20, 50, 100];
@@ -721,8 +723,6 @@ export default function App() {
           <h1>{t.appName}</h1>
           <p>{t.workspaceIntro}</p>
           <div className="hero-actions">
-            <a href={`${API_BASE_URL}/docs`} target="_blank" rel="noreferrer" title={t.tooltipOpenSwagger}>{t.openSwagger}</a>
-            {installButton}
             <button type="button" className="secondary-button" onClick={handleLogout} title={t.tooltipSignOut}>{t.signOut}</button>
           </div>
         </section>
@@ -730,7 +730,7 @@ export default function App() {
         <nav className="card menu-bar" aria-label={t.mainNavigation}>
           <button type="button" className={activeView === "time-tracking" ? "menu-button menu-button-active" : "menu-button"} onClick={() => setActiveView("time-tracking")} title={t.tooltipTimeTracking}>{t.timeTracking}</button>
           <button type="button" className={activeView === "profile" ? "menu-button menu-button-active" : "menu-button"} onClick={() => setActiveView("profile")} title={t.tooltipProfile}>{t.profile}</button>
-          <button type="button" className={activeView === "sandbox" ? "menu-button menu-button-active" : "menu-button"} onClick={() => setActiveView("sandbox")} title={t.tooltipSandbox}>{t.sandbox}</button>
+          <button type="button" className={activeView === "app-info" ? "menu-button menu-button-active" : "menu-button"} onClick={() => setActiveView("app-info")} title={t.tooltipAppInfo}>{t.appInfo}</button>
         </nav>
 
         {activeView === "time-tracking" ? (
@@ -793,28 +793,30 @@ export default function App() {
                 <button type="button" className="secondary-button" onClick={handleExportCsv} title={t.tooltipExportCsv}>{t.exportCsv}</button>
               </div>
               <form className="filters-grid" onSubmit={handleApplyFilters}>
-                <label>
-                  {t.projectName}
-                  <input list="project-suggestions" value={projectFilter} onChange={(event) => setProjectFilter(event.target.value)} placeholder={t.filterProjectPlaceholder} title={t.tooltipFilterProject} />
-                </label>
-                <label>
-                  {t.year}
-                  <input value={yearFilter} onChange={(event) => setYearFilter(event.target.value)} placeholder="2026" title={t.tooltipFilterYear} />
-                </label>
-                <label>
-                  {t.month}
-                  <input value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)} placeholder="4" title={t.tooltipFilterMonth} />
-                </label>
-                <label>
-                  {t.day}
-                  <input value={dayFilter} onChange={(event) => setDayFilter(event.target.value)} placeholder="9" title={t.tooltipFilterDay} />
-                </label>
-                <label>
-                  {t.pageSize}
-                  <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }} title={t.tooltipPageSize}>
-                    {PAGE_SIZE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
-                  </select>
-                </label>
+                <div className="filter-fields">
+                  <label>
+                    {t.projectName}
+                    <input list="project-suggestions" value={projectFilter} onChange={(event) => setProjectFilter(event.target.value)} placeholder={t.filterProjectPlaceholder} title={t.tooltipFilterProject} />
+                  </label>
+                  <label>
+                    {t.year}
+                    <input value={yearFilter} onChange={(event) => setYearFilter(event.target.value)} placeholder="2026" title={t.tooltipFilterYear} />
+                  </label>
+                  <label>
+                    {t.month}
+                    <input value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)} placeholder="4" title={t.tooltipFilterMonth} />
+                  </label>
+                  <label>
+                    {t.day}
+                    <input value={dayFilter} onChange={(event) => setDayFilter(event.target.value)} placeholder="9" title={t.tooltipFilterDay} />
+                  </label>
+                  <label>
+                    {t.pageSize}
+                    <select value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(1); }} title={t.tooltipPageSize}>
+                      {PAGE_SIZE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                    </select>
+                  </label>
+                </div>
                 <div className="inline-actions filter-actions">
                   <button type="submit" title={t.tooltipApplyFilters}>{t.applyFilters}</button>
                   <button type="button" className="secondary-button" onClick={handleClearFilters} title={t.tooltipClearFilters}>{t.clearFilters}</button>
@@ -950,8 +952,22 @@ export default function App() {
           </>
         ) : null}
 
-        {activeView === "sandbox" ? (
+        {activeView === "app-info" ? (
           <>
+            <section className="card">
+              <div className="section-header">
+                <div>
+                  <h2>{t.appInfo}</h2>
+                  <p className="muted">{t.publicHeartbeat}</p>
+                </div>
+              </div>
+              <div className="info-actions">
+                <a href={`${API_BASE_URL}/docs`} target="_blank" rel="noreferrer" title={t.tooltipOpenSwagger}>{t.openSwagger}</a>
+                <a href={MAILHOG_UI_URL} target="_blank" rel="noreferrer">{t.openMailhog}</a>
+                {installButton}
+              </div>
+            </section>
+
             <section className="card">
               <h2>{t.publicHeartbeat}</h2>
               {heartbeat ? (

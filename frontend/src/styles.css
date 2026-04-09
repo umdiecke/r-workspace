@@ -351,12 +351,20 @@ button,
 
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
   margin-bottom: 18px;
+  align-items: end;
 }
 
-.filters-grid label {
+.filter-fields {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 14px;
+}
+
+.filters-grid label,
+.filter-fields label {
   display: grid;
   gap: 8px;
   font-weight: 500;
@@ -364,6 +372,19 @@ button,
 
 .filter-actions {
   align-self: end;
+  justify-content: flex-end;
+}
+
+.filter-actions button {
+  min-width: 0;
+  width: auto;
+  white-space: nowrap;
+}
+
+.info-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .editing-card {
@@ -500,6 +521,7 @@ th {
 
   .info-grid,
   .filters-grid,
+  .filter-fields,
   .profile-grid,
   .profile-form {
     grid-template-columns: 1fr;
@@ -582,7 +604,15 @@ th {
   }
 
   .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-actions {
+    justify-content: stretch;
   }
 
   .shell {

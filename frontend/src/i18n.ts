@@ -1,5 +1,5 @@
 export type Locale = "de" | "en";
-export type View = "time-tracking" | "profile" | "sandbox";
+export type View = "time-tracking" | "profile" | "app-info";
 export type AuthMode = "login" | "register" | "reset";
 
 export const messages = {
@@ -27,11 +27,12 @@ export const messages = {
     signIn: "Sign in",
     createAccount: "Create account",
     sendReset: "Send new password",
-    sandbox: "Sandbox",
+    appInfo: "App Info",
     profile: "Profile",
     timeTracking: "Time tracking",
     signOut: "Sign out",
     openSwagger: "Open Swagger UI",
+    openMailhog: "Open MailHog UI",
     workspaceIntro:
       "Accessible multilingual workspace with OAuth2 authentication, OpenAPI endpoints, and time tracking.",
     publicHeartbeat: "Public heartbeat",
@@ -143,7 +144,7 @@ export const messages = {
     tooltipResetPassword: "Send a new temporary password to the stored email address.",
     tooltipOpenSwagger: "Open the OpenAPI documentation in Swagger UI.",
     tooltipSignOut: "End the current session and return to the login screen.",
-    tooltipSandbox: "Open the sandbox overview.",
+    tooltipAppInfo: "Open the application information and service links.",
     tooltipProfile: "Open the profile and account settings.",
     tooltipTimeTracking: "Open the time tracking workspace.",
     tooltipStart: "Start a new time tracking session.",
@@ -195,11 +196,12 @@ export const messages = {
     signIn: "Anmelden",
     createAccount: "Konto erstellen",
     sendReset: "Neues Passwort senden",
-    sandbox: "Sandbox",
+    appInfo: "App-Info",
     profile: "Profil",
     timeTracking: "Zeiterfassung",
     signOut: "Abmelden",
     openSwagger: "Swagger UI öffnen",
+    openMailhog: "MailHog UI öffnen",
     workspaceIntro:
       "Barrierearmer mehrsprachiger Workspace mit OAuth2-Authentifizierung, OpenAPI-Endpunkten und Zeiterfassung.",
     publicHeartbeat: "Öffentlicher Heartbeat",
@@ -312,7 +314,7 @@ export const messages = {
     tooltipResetPassword: "Ein neues temporäres Passwort an die hinterlegte E-Mail-Adresse senden.",
     tooltipOpenSwagger: "Die OpenAPI-Dokumentation in Swagger UI öffnen.",
     tooltipSignOut: "Die aktuelle Sitzung beenden und zum Login zurückkehren.",
-    tooltipSandbox: "Die Sandbox-Übersicht öffnen.",
+    tooltipAppInfo: "Die Anwendungsinformationen und Service-Links öffnen.",
     tooltipProfile: "Das Profil und die Kontoeinstellungen öffnen.",
     tooltipTimeTracking: "Den Bereich Zeiterfassung öffnen.",
     tooltipStart: "Eine neue Zeiterfassung starten.",

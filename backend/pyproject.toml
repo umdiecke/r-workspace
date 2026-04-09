@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "r-workspace"
-version = "1.4.0"
+version = "1.4.1"
 description = "Accessible multilingual workspace with OAuth2 authentication and OpenAPI documentation."
 readme = "README.md"
 requires-python = ">=3.11"

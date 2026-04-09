@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException, Query, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -13,6 +13,7 @@ from app.emailing import generate_temporary_password, send_password_reset_email
 from app.models import (
     ActiveTimeEntryResponse,
     AccountEmailUpdateRequest,
+    AccountProfileUpdateRequest,
     AccountPasswordUpdateRequest,
     HeartbeatResponse,
     MessageResponse,
@@ -82,6 +83,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -188,6 +190,39 @@ async def read_current_user(current_user: User = Depends(get_current_user)) -> U
 
 
 @app.put(
+    "/api/account/profile",
+    tags=["Users"],
+    response_model=User,
+    summary="Update the profile details of the current user",
+)
+async def update_account_profile(
+    payload: AccountProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    existing = db.scalar(select(UserRecord).where(UserRecord.email == payload.email))
+    if existing is not None and existing.username != current_user.username:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already exists.")
+
+    user = db.scalar(select(UserRecord).where(UserRecord.username == current_user.username))
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    user.full_name = payload.full_name.strip()
+    user.email = payload.email
+    db.commit()
+    db.refresh(user)
+    return User.model_validate(
+        {
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "disabled": user.disabled,
+        }
+    )
+
+
+@app.put(
     "/api/account/email",
     tags=["Users"],
     response_model=User,
@@ -238,6 +273,26 @@ async def update_account_password(
     user.hashed_password = hash_password(payload.new_password)
     db.commit()
     return MessageResponse(message="Password updated successfully.")
+
+
+@app.delete(
+    "/api/account",
+    tags=["Users"],
+    response_model=MessageResponse,
+    summary="Delete the current user account and associated time entries",
+)
+async def delete_account(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MessageResponse:
+    user = db.scalar(select(UserRecord).where(UserRecord.username == current_user.username))
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    db.execute(delete(TimeEntry).where(TimeEntry.owner_username == current_user.username))
+    db.delete(user)
+    db.commit()
+    return MessageResponse(message="Account deleted successfully.")
 
 
 @app.get(

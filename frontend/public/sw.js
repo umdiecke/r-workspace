@@ -1,4 +1,9 @@
 self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open("r-workspace-offline").then((cache) =>
+      cache.addAll(["/", "/manifest.webmanifest", "/icon-192.svg", "/icon-512.svg"])
+    )
+  );
   event.waitUntil(self.skipWaiting());
 });
 

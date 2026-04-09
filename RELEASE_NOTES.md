@@ -1,5 +1,19 @@
 # Release Notes
 
+## 1.4.0
+
+Release date: 2026-04-09
+
+Relevant changes:
+
+- Added a dedicated profile area for authenticated users to review and update personal data.
+- Added account deletion with a two-step confirmation dialog in the UI.
+- Added backend endpoints for profile updates and account deletion.
+- Fixed mobile login flows for local network access by allowing common local development origins through CORS.
+- Improved the login flow so the app loads the authenticated user immediately after token retrieval.
+- Expanded the PWA setup with install guidance, richer manifest metadata, and a better offline cache bootstrap.
+- Added an in-app install action for supported browsers.
+
 ## 1.3.1
 
 Release date: 2026-04-09

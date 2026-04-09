@@ -38,6 +38,11 @@ class AccountEmailUpdateRequest(BaseModel):
     email: EmailStr
 
 
+class AccountProfileUpdateRequest(BaseModel):
+    full_name: str = Field(min_length=1, max_length=255)
+    email: EmailStr
+
+
 class AccountPasswordUpdateRequest(BaseModel):
     current_password: str = Field(min_length=1, max_length=255)
     new_password: str = Field(min_length=8, max_length=255)

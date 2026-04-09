@@ -419,6 +419,45 @@ th {
   gap: 18px;
 }
 
+.profile-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-form label:first-child {
+  grid-column: 1 / -1;
+}
+
+.install-card,
+.danger-zone {
+  padding: 18px;
+  border-radius: 18px;
+  background: #f6fbfb;
+}
+
+.danger-button {
+  background: #b42318;
+  color: #fff;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(31, 41, 51, 0.56);
+  z-index: 1100;
+}
+
+.modal-card {
+  width: min(100%, 520px);
+  padding: 28px;
+  border-radius: 24px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
 .result,
 .error {
   margin-top: 16px;
@@ -461,7 +500,8 @@ th {
 
   .info-grid,
   .filters-grid,
-  .profile-grid {
+  .profile-grid,
+  .profile-form {
     grid-template-columns: 1fr;
   }
 

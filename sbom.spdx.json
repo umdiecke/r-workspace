@@ -3,7 +3,7 @@
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
   "name": "R.Workspace SBOM",
-  "documentNamespace": "https://umdiecke.local/spdx/r-workspace-1.3.0",
+  "documentNamespace": "https://umdiecke.local/spdx/r-workspace-1.3.1",
   "creationInfo": {
     "created": "2026-04-09T00:00:00Z",
     "creators": [
@@ -19,7 +19,7 @@
     {
       "name": "R.Workspace",
       "SPDXID": "SPDXRef-App",
-      "versionInfo": "1.3.0",
+      "versionInfo": "1.3.1",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -30,7 +30,7 @@
     {
       "name": "r-workspace",
       "SPDXID": "SPDXRef-Backend",
-      "versionInfo": "1.3.0",
+      "versionInfo": "1.3.1",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
@@ -41,7 +41,7 @@
     {
       "name": "r-workspace-ui",
       "SPDXID": "SPDXRef-Frontend",
-      "versionInfo": "1.3.0",
+      "versionInfo": "1.3.1",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",

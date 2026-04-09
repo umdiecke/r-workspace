@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     service_name: str = "R.Workspace"
-    app_version: str = "1.3.0"
+    app_version: str = "1.3.1"
     secret_key: str = "change-this-in-production"
     access_token_expire_minutes: int = 30
     jwt_algorithm: str = "HS256"
@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     smtp_port: int = 1025
     smtp_username: str | None = None
     smtp_password: str | None = None
-    smtp_sender: str = "noreply@rworkspace.local"
+    smtp_sender: str = "noreply@rworkspace.example.com"
     smtp_starttls: bool = False
 
     model_config = SettingsConfigDict(env_prefix="UMDIECKE_", case_sensitive=False)

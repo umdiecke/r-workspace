@@ -55,12 +55,15 @@ async def lifespan(_: FastAPI):
             db.add(
                 UserRecord(
                     username="admin",
-                    email="admin@rworkspace.local",
+                    email="admin@rworkspace.example.com",
                     full_name="R.Workspace Administrator",
                     hashed_password=hash_password("changeit"),
                     disabled=False,
                 )
             )
+            db.commit()
+        elif admin_user.email.endswith("@rworkspace.local"):
+            admin_user.email = "admin@rworkspace.example.com"
             db.commit()
     yield
 

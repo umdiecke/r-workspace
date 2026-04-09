@@ -1,0 +1,47 @@
+# Release Notes
+
+## 1.2.0
+
+Release date: 2026-04-09
+
+Relevant changes:
+
+- Renamed the product from `UmdieckeFirst` to `R.Workspace`.
+- Updated project metadata and SBOM version references to `1.2.0`.
+- Added multilingual UI support for German and English with a language dropdown.
+- Added translated labels and tooltips for relevant buttons and input fields.
+- Improved accessibility with keyboard-friendly navigation, visible focus styles, skip links, screen-reader helper text, and a reduced accessible color palette.
+- Improved responsive behavior for phones and tablets.
+- Added installable web app basics with a web manifest, icons, and service worker registration.
+
+## 1.1.0
+
+Release date: 2026-04-09
+
+Relevant changes:
+
+- Added WSL development support with a dedicated startup script for hot reload.
+- Added Docker Compose support for local full-stack startup.
+- Added an SPDX SBOM file for software component documentation.
+- Added a protected login page in the frontend.
+- Added post-login navigation with `Sandbox` and `Zeiterfassung`.
+- Added PostgreSQL-backed time tracking with OpenAPI endpoints.
+- Added start and stop time capture with project name and activity description.
+- Added persistence for previously used project names.
+- Added tabular time entry display including duration in hours.
+- Added filtering by project, day, month, and year.
+- Added paging with configurable page sizes.
+- Added CSV export for filtered time tracking results.
+
+## 1.0.0
+
+Release date: 2026-04-09
+
+Relevant changes:
+
+- Initial release of the microservice foundation.
+- Added FastAPI backend with OAuth2 bearer authentication.
+- Added public heartbeat endpoint returning HTTP 200, service name, and SemVer version.
+- Added OpenAPI documentation and Swagger UI.
+- Added React and Vite frontend scaffold.
+- Added basic protected user endpoint for authenticated API testing.

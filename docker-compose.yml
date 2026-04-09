@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: r-workspace-db
+    environment:
+      POSTGRES_DB: umdiecke
+      POSTGRES_USER: umdiecke
+      POSTGRES_PASSWORD: umdiecke
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umdiecke -d umdiecke"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: r-workspace-backend
+    environment:
+      UMDIECKE_CORS_ORIGINS: '["http://localhost:5173"]'
+      UMDIECKE_DATABASE_URL: postgresql+psycopg://umdiecke:umdiecke@db:5432/umdiecke
+      WATCHFILES_FORCE_POLLING: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/pyproject.toml:/app/pyproject.toml:ro
+      - ./backend/README.md:/app/README.md:ro
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: r-workspace-frontend
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:

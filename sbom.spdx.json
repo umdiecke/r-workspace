@@ -1,0 +1,290 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "R.Workspace SBOM",
+  "documentNamespace": "https://umdiecke.local/spdx/r-workspace-1.2.0",
+  "creationInfo": {
+    "created": "2026-04-09T00:00:00Z",
+    "creators": [
+      "Tool: OpenAI Codex"
+    ]
+  },
+  "documentDescribes": [
+    "SPDXRef-App",
+    "SPDXRef-Backend",
+    "SPDXRef-Frontend"
+  ],
+  "packages": [
+    {
+      "name": "R.Workspace",
+      "SPDXID": "SPDXRef-App",
+      "versionInfo": "1.2.0",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "APPLICATION"
+    },
+    {
+      "name": "r-workspace",
+      "SPDXID": "SPDXRef-Backend",
+      "versionInfo": "1.2.0",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "SOURCE"
+    },
+    {
+      "name": "r-workspace-ui",
+      "SPDXID": "SPDXRef-Frontend",
+      "versionInfo": "1.2.0",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "NOASSERTION",
+      "primaryPackagePurpose": "SOURCE"
+    },
+    {
+      "name": "fastapi",
+      "SPDXID": "SPDXRef-Package-fastapi",
+      "versionInfo": ">=0.115.0,<1.0.0",
+      "downloadLocation": "https://pypi.org/project/fastapi/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: PyPI"
+    },
+    {
+      "name": "uvicorn[standard]",
+      "SPDXID": "SPDXRef-Package-uvicorn-standard",
+      "versionInfo": ">=0.30.0,<1.0.0",
+      "downloadLocation": "https://pypi.org/project/uvicorn/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: PyPI"
+    },
+    {
+      "name": "python-jose[cryptography]",
+      "SPDXID": "SPDXRef-Package-python-jose-cryptography",
+      "versionInfo": ">=3.3.0,<4.0.0",
+      "downloadLocation": "https://pypi.org/project/python-jose/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: PyPI"
+    },
+    {
+      "name": "passlib",
+      "SPDXID": "SPDXRef-Package-passlib",
+      "versionInfo": ">=1.7.4,<2.0.0",
+      "downloadLocation": "https://pypi.org/project/passlib/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: PyPI"
+    },
+    {
+      "name": "python-multipart",
+      "SPDXID": "SPDXRef-Package-python-multipart",
+      "versionInfo": ">=0.0.9,<1.0.0",
+      "downloadLocation": "https://pypi.org/project/python-multipart/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: PyPI"
+    },
+    {
+      "name": "pydantic-settings",
+      "SPDXID": "SPDXRef-Package-pydantic-settings",
+      "versionInfo": ">=2.4.0,<3.0.0",
+      "downloadLocation": "https://pypi.org/project/pydantic-settings/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: PyPI"
+    },
+    {
+      "name": "sqlalchemy",
+      "SPDXID": "SPDXRef-Package-sqlalchemy",
+      "versionInfo": ">=2.0.36,<3.0.0",
+      "downloadLocation": "https://pypi.org/project/SQLAlchemy/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: PyPI"
+    },
+    {
+      "name": "psycopg[binary]",
+      "SPDXID": "SPDXRef-Package-psycopg-binary",
+      "versionInfo": ">=3.2.3,<4.0.0",
+      "downloadLocation": "https://pypi.org/project/psycopg/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: PyPI"
+    },
+    {
+      "name": "react",
+      "SPDXID": "SPDXRef-Package-react",
+      "versionInfo": "^18.3.1",
+      "downloadLocation": "https://www.npmjs.com/package/react",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: npm"
+    },
+    {
+      "name": "react-dom",
+      "SPDXID": "SPDXRef-Package-react-dom",
+      "versionInfo": "^18.3.1",
+      "downloadLocation": "https://www.npmjs.com/package/react-dom",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: npm"
+    },
+    {
+      "name": "@types/react",
+      "SPDXID": "SPDXRef-Package-types-react",
+      "versionInfo": "^18.3.5",
+      "downloadLocation": "https://www.npmjs.com/package/@types/react",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: npm"
+    },
+    {
+      "name": "@types/react-dom",
+      "SPDXID": "SPDXRef-Package-types-react-dom",
+      "versionInfo": "^18.3.0",
+      "downloadLocation": "https://www.npmjs.com/package/@types/react-dom",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: npm"
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "SPDXID": "SPDXRef-Package-vitejs-plugin-react",
+      "versionInfo": "^4.3.1",
+      "downloadLocation": "https://www.npmjs.com/package/@vitejs/plugin-react",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: npm"
+    },
+    {
+      "name": "typescript",
+      "SPDXID": "SPDXRef-Package-typescript",
+      "versionInfo": "^5.5.4",
+      "downloadLocation": "https://www.npmjs.com/package/typescript",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: npm"
+    },
+    {
+      "name": "vite",
+      "SPDXID": "SPDXRef-Package-vite",
+      "versionInfo": "^5.4.2",
+      "downloadLocation": "https://www.npmjs.com/package/vite",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "supplier": "Organization: npm"
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-App",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Backend"
+    },
+    {
+      "spdxElementId": "SPDXRef-App",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Frontend"
+    },
+    {
+      "spdxElementId": "SPDXRef-Backend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-fastapi"
+    },
+    {
+      "spdxElementId": "SPDXRef-Backend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-uvicorn-standard"
+    },
+    {
+      "spdxElementId": "SPDXRef-Backend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-python-jose-cryptography"
+    },
+    {
+      "spdxElementId": "SPDXRef-Backend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-passlib"
+    },
+    {
+      "spdxElementId": "SPDXRef-Backend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-python-multipart"
+    },
+    {
+      "spdxElementId": "SPDXRef-Backend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-pydantic-settings"
+    },
+    {
+      "spdxElementId": "SPDXRef-Backend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-sqlalchemy"
+    },
+    {
+      "spdxElementId": "SPDXRef-Backend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-psycopg-binary"
+    },
+    {
+      "spdxElementId": "SPDXRef-Frontend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-react"
+    },
+    {
+      "spdxElementId": "SPDXRef-Frontend",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-react-dom"
+    },
+    {
+      "spdxElementId": "SPDXRef-Frontend",
+      "relationshipType": "DEV_DEPENDENCY_OF",
+      "relatedSpdxElement": "SPDXRef-Package-types-react"
+    },
+    {
+      "spdxElementId": "SPDXRef-Frontend",
+      "relationshipType": "DEV_DEPENDENCY_OF",
+      "relatedSpdxElement": "SPDXRef-Package-types-react-dom"
+    },
+    {
+      "spdxElementId": "SPDXRef-Frontend",
+      "relationshipType": "DEV_DEPENDENCY_OF",
+      "relatedSpdxElement": "SPDXRef-Package-vitejs-plugin-react"
+    },
+    {
+      "spdxElementId": "SPDXRef-Frontend",
+      "relationshipType": "DEV_DEPENDENCY_OF",
+      "relatedSpdxElement": "SPDXRef-Package-typescript"
+    },
+    {
+      "spdxElementId": "SPDXRef-Frontend",
+      "relationshipType": "DEV_DEPENDENCY_OF",
+      "relatedSpdxElement": "SPDXRef-Package-vite"
+    }
+  ]
+}

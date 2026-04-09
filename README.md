@@ -23,7 +23,7 @@ For future changes in this project:
 
 ## Versioning
 
-The application version follows SemVer and is currently `1.3.1`.
+The application version follows SemVer and is currently `1.4.0`.
 
 ## Backend
 
@@ -34,8 +34,10 @@ The application version follows SemVer and is currently `1.3.1`.
 - Registration endpoint at `POST /api/auth/register`
 - Password reset endpoint at `POST /api/auth/password-reset`
 - Protected user endpoint at `GET /api/me`
+- Profile update endpoint at `PUT /api/account/profile`
 - Account email update at `PUT /api/account/email`
 - Account password update at `PUT /api/account/password`
+- Account deletion at `DELETE /api/account`
 - Time tracking endpoints under `/api/time-entries`
 - Remembered project suggestions at `GET /api/projects`
 - Swagger UI at `/docs`
@@ -79,8 +81,10 @@ For phone testing in the same network, open the frontend with your computer's IP
 - `POST /api/auth/register`
 - `POST /api/auth/password-reset`
 - `GET /api/me`
+- `PUT /api/account/profile`
 - `PUT /api/account/email`
 - `PUT /api/account/password`
+- `DELETE /api/account`
 - `GET /api/time-entries/active`
 - `POST /api/time-entries/start`
 - `POST /api/time-entries/{entry_id}/stop`
@@ -110,6 +114,12 @@ It also includes installable web app basics:
 - service worker registration
 - application icons
 - standalone display mode for supported browsers
+- browser-driven install prompt support
+
+Important for Android:
+
+- a full app-like installation generally requires HTTPS or `localhost`
+- a plain local network URL such as `http://192.168.x.x:5173` is useful for testing, but browsers may not offer full PWA installation there because it is not a secure context
 
 On a phone or desktop browser that supports installation, open the site and use the browser's install action such as `Install app`, `Add to Home Screen`, or the install icon in the address bar.
 
@@ -198,3 +208,14 @@ The API also provides:
 - filtered and paged results
 - CSV export of filtered results
 - entry editing and deletion
+
+## Profile And Account Management
+
+Authenticated users can now:
+
+- review their stored personal details
+- update full name and email address
+- change their password
+- delete their account with a two-step confirmation dialog
+
+Deleting an account also removes the user's recorded time entries.

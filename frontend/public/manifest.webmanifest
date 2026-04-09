@@ -2,11 +2,17 @@
   "name": "R.Workspace",
   "short_name": "R.Workspace",
   "description": "Accessible multilingual workspace with OAuth2 authentication and time tracking.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait-primary",
   "background_color": "#f4f1ea",
   "theme_color": "#005f73",
   "lang": "de",
+  "categories": ["productivity", "business", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.svg",
